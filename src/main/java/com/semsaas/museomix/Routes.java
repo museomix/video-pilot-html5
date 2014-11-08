@@ -1,5 +1,6 @@
 package com.semsaas.museomix;
 
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,13 +35,29 @@ public class Routes extends RouteBuilder {
 			in.setBody(event);
 		}
 	};
-	
+
+	String device = "/dev/ttyACM0";
+	String OS = System.getProperty("os.name").toLowerCase();
+
 	@Override
-	public void configure() throws Exception {		
+	public void configure() throws Exception {
+		String configDevice = System.getProperty("device");
+		if(configDevice != null) {
+			device = configDevice;
+		}
+		
 		eventQueue = this.getContext().getEndpoint("seda:events");
 		eventConsumer = eventQueue.createPollingConsumer();
-		
-		Runtime.getRuntime().exec("/bin/stty -F /dev/ttyACM0 115200");
+		if(OS.indexOf("mac") >= 0) {
+			Runtime.getRuntime().exec("/bin/stty -f "+device+" 115200");			
+		} else if (OS.indexOf("nux") >= 0) {
+			Runtime.getRuntime().exec("/bin/stty -F "+device+" 115200");
+		} else {
+			throw new Exception("Unsupported OS "+OS);
+		}
+		if(!new File(device).exists()) {
+			throw new Exception("Device not found "+device);
+		}
 		
 		from("servlet://api/pad/state")
 			.process(consumePad)
