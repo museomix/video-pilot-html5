@@ -40,6 +40,8 @@ public class Routes extends RouteBuilder {
 		eventQueue = this.getContext().getEndpoint("seda:events");
 		eventConsumer = eventQueue.createPollingConsumer();
 		
+		Runtime.getRuntime().exec("/bin/stty -F /dev/ttyACM0 115200");
+		
 		from("servlet://api/pad/state")
 			.process(consumePad)
 			.to("log:raw")
