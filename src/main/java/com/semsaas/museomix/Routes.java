@@ -65,7 +65,7 @@ public class Routes extends RouteBuilder {
 			.convertBodyTo(String.class)
 		;
 		
-		from("stream:file?fileName=/dev/ttyACM0&scanStream=true")
+		from("stream:file?fileName="+device+"&scanStream=true")
 			.to("log:raw")
 			.to("seda:events")
 		;
