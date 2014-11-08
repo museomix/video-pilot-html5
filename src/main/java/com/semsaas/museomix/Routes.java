@@ -1,5 +1,8 @@
 package com.semsaas.museomix;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -12,12 +15,23 @@ public class Routes extends RouteBuilder {
 	PollingConsumer eventConsumer;
 
 	Processor consumePad = new Processor() {
+		Pattern padEventPattern = Pattern.compile(">G.*Gesture = ([A-Z]*)$");
 		public void process(Exchange exchange) throws Exception {
 			Message in = exchange.getIn();
-			Exchange evtExchange = eventConsumer.receive();
+			String event = null;
+			while(event == null) {
+				Exchange evtExchange = eventConsumer.receive();
+				Message evtIn = evtExchange.getIn();
+				event = evtIn.getBody(String.class);			
+				Matcher matcher = padEventPattern.matcher(event);
+				if(matcher.matches()) {
+					event = matcher.group(1);
+				} else {
+					event = null;
+				}
+			}
 			
-			Message evtIn = evtExchange.getIn();
-			in.setBody(evtIn.getBody());
+			in.setBody(event);
 		}
 	};
 	
@@ -28,9 +42,12 @@ public class Routes extends RouteBuilder {
 		
 		from("servlet://api/pad/state")
 			.process(consumePad)
+			.to("log:raw")
+			.convertBodyTo(String.class)
 		;
 		
 		from("stream:file?fileName=/dev/ttyACM0&scanStream=true")
+			.to("log:raw")
 			.to("seda:events")
 		;
 	}

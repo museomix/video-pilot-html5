@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_3_0.xsd">
+    <display-name>Camel Routes</display-name>
+
+    <!-- location of spring xml files -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:camel.xml</param-value>
+    </context-param>
+    <context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>classpath:log4j.webapp.properties</param-value>
+	</context-param>
+    
+
+    <!-- the listener that kick-starts Spring -->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    
+    <listener>
+    	<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+    </listener>
+    
+    <servlet>
+    	<servlet-name>default</servlet-name>
+    	<servlet-class>org.eclipse.jetty.servlet.DefaultServlet</servlet-class>
+    	<init-param>
+    		<param-name>aliases</param-name>
+    		<param-value>true</param-value>
+    	</init-param>
+    </servlet>
+    
+    <servlet>
+    	<servlet-name>CamelServlet</servlet-name>
+    	<servlet-class>org.apache.camel.component.servlet.CamelHttpTransportServlet</servlet-class>
+	    <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+    	<servlet-name>CamelServlet</servlet-name>
+    	<url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+</web-app>

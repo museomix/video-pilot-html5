@@ -7,6 +7,38 @@
 	<link rel="stylesheet" href="webjars/bootstrap/3.3.0/css/bootstrap.css"></style>
 	
 	<script>
+		function doLeft() {
+			var curLeft = $('#viewport').position().left;
+			console.log(curLeft);
+			$('#viewport').css("left",curLeft + 30)
+		}
+	
+		function doRight() {
+			var curLeft = $('#viewport').position().left;
+			console.log(curLeft);
+			$('#viewport').css("left",curLeft - 30)
+		}
+		
+		function doSpeedUp() {
+			var vid = $('#video').get(0);
+			vid.playbackRate += 1;
+			$('#speed').val(vid.playbackRate);
+		}
+		
+		function doSpeedDown() {
+			var vid = $('#video').get(0);
+			vid.playbackRate -= 1;
+			$('#speed').val(vid.playbackRate);
+		}
+		
+		function doTogglePlay() {
+			var vid = $('#video').get(0);
+			if(vid.paused) {
+				vid.play();
+			} else {
+				vid.pause();
+			}
+		}
 		$(function() {
 			var vid = $('#video').get(0);
 			vid.autoplay = true;
@@ -17,16 +49,8 @@
 				vid.playbackRate = 	$('#speed').val();
 			});
 			
-			$('#left').click(function() {
-				var curLeft = $('#viewport').position().left;
-				console.log(curLeft);
-				$('#viewport').css("left",curLeft + 10)
-			});
-			$('#right').click(function() {
-				var curLeft = $('#viewport').position().left;
-				console.log(curLeft);
-				$('#viewport').css("left",curLeft - 10)
-			});
+			$('#left').click(doLeft);
+			$('#right').click(doRight);
 			
 			setInterval(function(){
 				var vid = $('#video').get(0);
@@ -37,6 +61,33 @@
 					$('#circle').fadeOut();
 				}
 			},1000);
+			
+			function doPollState() {
+				$.ajax({
+					  url: "/api/pad/state",
+				})
+				.success(
+					function(data, textStatus, jqXHR) {
+						$('#action').html(data);
+						if("LEFT" == data) {
+							doLeft();
+						} else if ("RIGHT" == data) {
+							doRight();
+						} else if ("UP" == data) {
+							doSpeedUp();
+						} else if ("DOWN" == data) {
+							doSpeedDown();
+						} else if ("PUSH" == data) {
+							doTogglePlay();
+						}
+					}
+				)
+				.done(
+					function() { setTimeout(doPollState,0); }
+				);
+			}
+			
+			doPollState();
 		});
 	</script>
 </head>
@@ -47,7 +98,10 @@
 		<form role="form" action="#">
 			<div class="form-group">
 				<div class="row">
-					<div class="col-lg-2">
+					<div class="col-lg-1">
+					Action : <span id="action"></span>
+					</div>
+					<div class="col-lg-1">
 					Time : <span id="time"></span>
 					</div>
 					<div class="col-lg-4">
@@ -82,7 +136,7 @@
 					</rect>
 				</svg>
 				<video id="video" controls="controls"  style="position: absolute; top:0; left:0; width:800; height:600; z-index:200">
-					<source src="Theatre-2014-youtube-HD.mp4" type="video/mp4">
+					<source src="VID_20141108_223725.mp4" type="video/mp4">
 				</video>
 			</div>
 		</div>
